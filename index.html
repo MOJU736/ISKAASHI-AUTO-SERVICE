@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Iskaashi Auto Service</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#fff; --ink:#1c2430; --muted:#6b7686; --line:#e1e6ee;
+    --brand:#0f6fde; --brand-ink:#fff; --ok:#12805c; --warn:#b26a00; --bad:#c62f3e;
+    --ok-bg:#e3f5ee; --warn-bg:#fff2dc; --bad-bg:#fde8ea; --side:#14213a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#10151d; --panel:#192130; --ink:#e7ecf3; --muted:#92a0b4; --line:#2a3548;
+      --brand:#4a9bff; --brand-ink:#08111f; --ok:#4cd3a0; --warn:#f0b24d; --bad:#ff7683;
+      --ok-bg:#12372b; --warn-bg:#3b2d12; --bad-bg:#3d1a20; --side:#0b1019; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  .app{display:grid;grid-template-columns:210px 1fr;min-height:100vh}
+  nav{background:var(--side);color:#cfd8e6;padding:16px 10px;position:sticky;top:0;height:100vh;overflow:auto}
+  nav h1{font-size:16px;color:#fff;margin:0 8px 16px}
+  nav a{display:block;padding:9px 12px;border-radius:8px;color:inherit;text-decoration:none;margin-bottom:2px}
+  nav a:hover{background:rgba(255,255,255,.08)}
+  nav a.on{background:var(--brand);color:var(--brand-ink)}
+  main{padding:22px;max-width:1200px;width:100%}
+  h2{margin:0 0 14px;font-size:22px}
+  h3{margin:22px 0 8px;font-size:16px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .bar .grow{flex:1}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .stat .v{font-size:24px;font-weight:650;margin-top:4px}
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:auto}
+  table{border-collapse:collapse;width:100%}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;background:rgba(127,127,127,.06)}
+  tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  td.acts{text-align:right}
+  .empty{padding:26px;text-align:center;color:var(--muted)}
+  button,.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer}
+  button:hover{border-color:var(--brand)}
+  button.primary{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+  button.danger{color:var(--bad)}
+  button.sm{padding:3px 8px;font-size:12px}
+  input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%}
+  input[type=search]{max-width:260px}
+  .bar select{width:auto}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:10px}
+  label input,label select,label textarea{margin-top:3px;font-size:14px}
+  .pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600}
+  .pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
+  .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.gray{background:rgba(127,127,127,.15);color:var(--muted)}
+  .pos{color:var(--ok)} .neg{color:var(--bad)} .muted{color:var(--muted)}
+  dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:20px;width:min(480px,94vw)}
+  dialog::backdrop{background:rgba(0,0,0,.45)}
+  dialog h3{margin-top:0}
+  .err{color:var(--bad);margin:6px 0;min-height:1em}
+  .hint{margin:-4px 0 10px;font-size:12px;color:var(--warn)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+  .banner{background:var(--bad-bg);color:var(--bad);padding:10px 14px;border-radius:10px;margin-bottom:14px}
+  .banner.warn{background:var(--warn-bg);color:var(--warn)}
+  .meter{height:6px;background:var(--line);border-radius:9px;min-width:70px;overflow:hidden;margin-top:3px}
+  .meter i{display:block;height:100%;background:var(--brand)}
+  @media (max-width:760px){
+    .app{grid-template-columns:1fr}
+    nav{position:static;height:auto;display:flex;gap:4px;overflow-x:auto;padding:8px}
+    nav h1{display:none} nav a{white-space:nowrap;margin:0}
+    main{padding:14px}
+  }
+  @media print{ nav,.bar button{display:none} .app{display:block} }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav id="nav"></nav>
+  <main id="view"></main>
+</div>
+<dialog id="dlg"></dialog>
+
+<script>
+"use strict";
+/* ============ Storage ============ */
+const KEY = "iskaashi_auto_service_v1";
+const EMPTY = () => ({ sims:[], customers:[], packages:[], subs:[], charges:[], payments:[], audit:[],
+                       settings:{ currency:"USD", lastBackup:null } });
+let db = EMPTY();
+let storageOK = true;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw) db = Object.assign(EMPTY(), JSON.parse(raw));
+    db.settings = Object.assign(EMPTY().settings, db.settings);
+  }catch(e){ storageOK = false; }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); storageOK = true; }
+  catch(e){ storageOK = false; }
+}
+function log(action, detail){
+  db.audit.unshift({ id:uid(), ts:new Date().toISOString(), action, detail:detail||"" });
+  if(db.audit.length > 5000) db.audit.length = 5000;
+}
+
+/* ============ Helpers ============ */
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => isoDate(new Date());
+function addMonths(iso, n){
+  const [y,m,d] = iso.split("-").map(Number);
+  const t = new Date(y, m-1+n, 1);
+  const last = new Date(t.getFullYear(), t.getMonth()+1, 0).getDate();
+  t.setDate(Math.min(d,last));
+  return isoDate(t);
+}
+function daysBetween(a,b){ return Math.round((new Date(b+"T00:00:00") - new Date(a+"T00:00:00"))/864e5); }
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const money = n => `${(Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} ${esc(db.settings.currency)}`;
+const gb = n => `${Math.round(n*100)/100} GB`;
+const byId = (arr,id) => arr.find(x => x.id === id);
+const sum = (arr,f) => arr.reduce((a,x) => a + f(x), 0);
+const cls = n => n > 0 ? "pos" : n < 0 ? "neg" : "";
+
+const simName = id => { const s = byId(db.sims,id); return s ? s.msisdn : "(deleted SIM)"; };
+const custName = id => { const c = byId(db.customers,id); return c ? c.name : "(deleted customer)"; };
+const pkgName = id => { const p = byId(db.packages,id); return p ? p.name : "(deleted package)"; };
+
+const charged = subId => sum(db.charges.filter(c => c.subId===subId), c => c.amount);
+const paid = subId => sum(db.payments.filter(p => p.subId===subId), p => p.amount);
+const balance = subId => charged(subId) - paid(subId);
+const custBalance = cid => sum(db.subs.filter(s => s.customerId===cid), s => balance(s.id));
+const activeSubOfSim = simId => db.subs.find(s => s.simId===simId && s.active);
+
+/* Automatic renewal: bill every cycle whose date has arrived. */
+function runRenewals(){
+  let n = 0;
+  const t = today();
+  for(const s of db.subs){
+    if(!s.active) continue;
+    let guard = 0;
+    while(s.nextPaymentDate <= t && guard++ < 60){
+      db.charges.push({ id:uid(), subId:s.id, customerId:s.customerId, packageId:s.packageId,
+        date:s.nextPaymentDate, amount:s.price, cost:s.cost, kind:"renewal" });
+      s.usedGB = 0;
+      s.nextPaymentDate = addMonths(s.nextPaymentDate, 1);
+      n++;
+    }
+  }
+  if(n){ log("Auto renewal", `${n} renewal charge(s) generated`); save(); }
+  return n;
+}
+
+/* ============ CSV / download ============ */
+function toCSV(rows, cols){
+  const q = v => { v = v ?? ""; v = String(v); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v; };
+  return "﻿" + [cols.map(c=>q(c[0])).join(","), ...rows.map(r => cols.map(c=>q(c[1](r))).join(","))].join("\r\n");
+}
+function download(name, text, type){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text],{type}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function exportCSV(name, rows, cols){
+  download(`${name}-${today()}.csv`, toCSV(rows,cols), "text/csv;charset=utf-8");
+  log("CSV export", name); save();
+}
+
+/* ============ Dialog forms ============ */
+const dlg = document.getElementById("dlg");
+function openForm({title, fields, values={}, submit="Save", onChange, onSave}){
+  const inp = f => {
+    const v = values[f.name] ?? f.value ?? "";
+    const req = f.required ? "required" : "";
+    if(f.type==="select")
+      return `<select name="${f.name}" ${req}>${f.options.map(([val,lab]) => `<option value="${esc(val)}" ${val===v?"selected":""}>${esc(lab)}</option>`).join("")}</select>`;
+    if(f.type==="textarea") return `<textarea name="${f.name}" rows="2">${esc(v)}</textarea>`;
+    return `<input name="${f.name}" type="${f.type||"text"}" value="${esc(v)}" ${req} ${f.step?`step="${f.step}"`:""} ${f.min!=null?`min="${f.min}"`:""} ${f.type==="number"?'inputmode="decimal"':""}>`;
+  };
+  dlg.innerHTML = `<form method="dialog"><h3>${esc(title)}</h3>
+    <div class="row2">${fields.map(f => `<label style="${f.full||f.type==="textarea"?"grid-column:1/-1":""}">${esc(f.label)}${f.required?" *":""}${inp(f)}${f.hint?`<span class="muted">${esc(f.hint)}</span>`:""}</label>`).join("")}</div>
+    <div class="hint" id="fhint"></div><div class="err" id="ferr"></div>
+    <div class="actions"><button type="button" id="fcancel">Cancel</button><button class="primary" type="submit">${esc(submit)}</button></div></form>`;
+  const form = dlg.querySelector("form");
+  form.addEventListener("input", e => onChange && onChange(e.target.name, form, e.type));
+  form.addEventListener("change", e => onChange && onChange(e.target.name, form, "change"));
+  dlg.querySelector("#fcancel").onclick = () => dlg.close();
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    for(const k in data) if(typeof data[k]==="string") data[k] = data[k].trim();
+    const err = onSave(data);
+    if(err){ dlg.querySelector("#ferr").textContent = err; return; }
+    dlg.close(); save(); render();
+  });
+  if(!dlg.open) dlg.showModal();
+  onChange && onChange(null, form, "init");
+  const first = form.querySelector("input,select,textarea"); first && first.focus();
+}
+function ask(msg){ return confirm(msg); }
+
+/* ============ Views ============ */
+const routes = {
+  dashboard:["Dashboard", vDashboard], sims:["SIM Inventory", vSims], customers:["Customers", vCustomers],
+  packages:["Packages", vPackages], subscriptions:["Subscriptions", vSubs], payments:["Payments", vPayments],
+  reports:["Reports", vReports], data:["Data & Backup", vData]
+};
+let query = "";   // search box
+let filters = {}; // per-view filter state
+
+function table(cols, rows, empty){
+  if(!rows.length) return `<div class="tablewrap"><div class="empty">${esc(empty||"Nothing here yet.")}</div></div>`;
+  return `<div class="tablewrap"><table><thead><tr>${cols.map(c=>`<th class="${c.num?"num":""}">${esc(c.h)}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c.num?"num":""} ${c.acts?"acts":""}">${c.f(r)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+const searchBox = ph => `<input type="search" id="q" placeholder="${esc(ph)}" value="${esc(query)}">`;
+const matches = (obj, keys) => !query || keys.some(k => String(obj[k]??"").toLowerCase().includes(query.toLowerCase()));
+const btn = (act,id,label,extra="") => `<button class="sm ${extra}" data-act="${act}" data-id="${esc(id)}">${label}</button>`;
+
+/* ---- Dashboard ---- */
+function vDashboard(){
+  const revenue = sum(db.charges, c => c.amount), cost = sum(db.charges, c => c.cost);
+  const collected = sum(db.payments, p => p.amount);
+  const outstanding = sum(db.subs, s => Math.max(0, balance(s.id)));
+  const unpaid = db.customers.map(c => ({c, bal:custBalance(c.id)})).filter(x => x.bal > 0.005).sort((a,b)=>b.bal-a.bal);
+  const t = today();
+  const upcoming = db.subs.filter(s => s.active && daysBetween(t, s.nextPaymentDate) <= 7)
+                          .sort((a,b)=>a.nextPaymentDate.localeCompare(b.nextPaymentDate));
+  const activeCust = new Set(db.subs.filter(s=>s.active).map(s=>s.customerId)).size;
+  const stat = (l,v,c="") => `<div class="card stat"><div class="l">${l}</div><div class="v ${c}">${v}</div></div>`;
+  return `<div class="grid">
+    ${stat("SIMs in stock", db.sims.filter(s=>s.status==="stock").length)}
+    ${stat("Assigned SIMs", db.sims.filter(s=>s.status==="assigned").length)}
+    ${stat("Active customers", activeCust)}
+    ${stat("Revenue (billed)", money(revenue))}
+    ${stat("Cost", money(cost))}
+    ${stat("Profit", money(revenue-cost), cls(revenue-cost))}
+    ${stat("Collected", money(collected))}
+    ${stat("Outstanding", money(outstanding), outstanding>0?"neg":"")}
+  </div>
+  <h3>Unpaid customers (${unpaid.length})</h3>
+  ${table([
+    {h:"Customer", f:r=>`<a href="#customer/${r.c.id}">${esc(r.c.name)}</a>`},
+    {h:"Phone", f:r=>esc(r.c.phone)},
+    {h:"Owes", num:1, f:r=>`<b class="neg">${money(r.bal)}</b>`},
+    {h:"", acts:1, f:r=>btn("pay-cust", r.c.id, "Record payment")}
+  ], unpaid, "Everyone is paid up.")}
+  <h3>Upcoming renewals — next 7 days (${upcoming.length})</h3>
+  ${table([
+    {h:"Renews", f:s=>{const d=daysBetween(t,s.nextPaymentDate); return `${s.nextPaymentDate} <span class="muted">(${d===0?"today":d+" d"})</span>`}},
+    {h:"Customer", f:s=>esc(custName(s.customerId))}, {h:"SIM", f:s=>esc(simName(s.simId))},
+    {h:"Package", f:s=>esc(pkgName(s.packageId))}, {h:"Price", num:1, f:s=>money(s.price)}
+  ], upcoming, "No renewals due this week.")}`;
+}
+
+/* ---- SIM inventory ---- */
+function vSims(){
+  const f = filters.sims || "all";
+  const rows = db.sims.filter(s => (f==="all" || s.status===f) && matches(s,["msisdn","source","iccid"]));
+  return `<div class="bar">${searchBox("Search number, dealer, ICCID")}
+    <select id="f-sims">${[["all","All"],["stock","In stock"],["assigned","Assigned"]].map(([v,l])=>`<option value="${v}" ${f===v?"selected":""}>${l}</option>`).join("")}</select>
+    <span class="grow"></span><button class="primary" data-act="sim-new">+ Add SIM</button></div>
+  ${table([
+    {h:"MSISDN / SIM number", f:s=>`<b>${esc(s.msisdn)}</b>`}, {h:"Source / dealer", f:s=>esc(s.source)},
+    {h:"ICCID / serial", f:s=>esc(s.iccid)},
+    {h:"Status", f:s=>s.status==="stock"?`<span class="pill gray">In stock</span>`:`<span class="pill ok">Assigned</span>`},
+    {h:"Customer", f:s=>s.customerId?`<a href="#customer/${s.customerId}">${esc(custName(s.customerId))}</a>`:""},
+    {h:"Added", f:s=>esc(s.createdAt.slice(0,10))},
+    {h:"", acts:1, f:s=>(s.status==="stock"?btn("sim-assign",s.id,"Assign"):(activeSubOfSim(s.id)?"":btn("sim-return",s.id,"Return to stock")))
+        + " " + btn("sim-edit",s.id,"Edit") + " " + btn("sim-del",s.id,"Delete","danger")}
+  ], rows, "No SIMs yet — add your first one.")}`;
+}
+function simFields(){ return [
+  {name:"msisdn", label:"MSISDN / SIM number", required:true},
+  {name:"source", label:"Source / dealer number"},
+  {name:"iccid", label:"ICCID / serial", full:true}
+]; }
+function simCheck(d, selfId){
+  if(!d.msisdn) return "SIM number is required.";
+  if(db.sims.some(s => s.id!==selfId && s.msisdn===d.msisdn)) return "A SIM with that number already exists.";
+  if(d.iccid && db.sims.some(s => s.id!==selfId && s.iccid===d.iccid)) return "A SIM with that ICCID already exists.";
+}
+function simNew(){
+  openForm({title:"Add SIM", fields:simFields(), onSave:d => {
+    const e = simCheck(d); if(e) return e;
+    db.sims.push({id:uid(), msisdn:d.msisdn, source:d.source, iccid:d.iccid, status:"stock", customerId:null, createdAt:new Date().toISOString()});
+    log("SIM added", d.msisdn);
+  }});
+}
+function simEdit(id){
+  const s = byId(db.sims,id);
+  openForm({title:"Edit SIM", fields:simFields(), values:s, onSave:d => {
+    const e = simCheck(d,id); if(e) return e;
+    Object.assign(s,{msisdn:d.msisdn,source:d.source,iccid:d.iccid}); log("SIM edited", d.msisdn);
+  }});
+}
+function simAssign(id){
+  const s = byId(db.sims,id);
+  if(!db.customers.length){ alert("Add a customer first."); return; }
+  openForm({title:`Assign ${s.msisdn} to customer`, submit:"Assign",
+    fields:[{name:"customerId", label:"Customer", type:"select", full:true, options:db.customers.map(c=>[c.id,`${c.name} (${c.phone})`])}],
+    onSave:d => { s.status="assigned"; s.customerId=d.customerId; log("SIM assigned", `${s.msisdn} → ${custName(d.customerId)}`); }});
+}
+function simReturn(id){
+  const s = byId(db.sims,id);
+  if(!ask(`Return ${s.msisdn} to stock?`)) return;
+  log("SIM returned to stock", `${s.msisdn} (was ${custName(s.customerId)})`);
+  s.status="stock"; s.customerId=null; save(); render();
+}
+function simDel(id){
+  const s = byId(db.sims,id);
+  if(db.subs.some(x=>x.simId===id)) return alert("This SIM has subscription history and cannot be deleted.");
+  if(!ask(`Delete SIM ${s.msisdn}?`)) return;
+  db.sims = db.sims.filter(x=>x.id!==id); log("SIM deleted", s.msisdn); save(); render();
+}
+
+/* ---- Customers ---- */
+function vCustomers(){
+  const rows = db.customers.filter(c => matches(c,["name","phone","linkedNumber"]));
+  return `<div class="bar">${searchBox("Search name or phone")}<span class="grow"></span>
+    <button class="primary" data-act="cust-new">+ Add customer</button></div>
+  ${table([
+    {h:"Name", f:c=>`<a href="#customer/${c.id}"><b>${esc(c.name)}</b></a>`}, {h:"Phone", f:c=>esc(c.phone)},
+    {h:"Linked number", f:c=>esc(c.linkedNumber)},
+    {h:"SIMs", num:1, f:c=>db.sims.filter(s=>s.customerId===c.id).length},
+    {h:"Active subs", num:1, f:c=>db.subs.filter(s=>s.customerId===c.id&&s.active).length},
+    {h:"Balance", num:1, f:c=>{const b=custBalance(c.id); return b>0.005?`<b class="neg">${money(b)}</b>`:money(b)}},
+    {h:"", acts:1, f:c=>btn("cust-edit",c.id,"Edit")+" "+btn("cust-del",c.id,"Delete","danger")}
+  ], rows, "No customers yet.")}`;
+}
+function custFields(){ return [
+  {name:"name", label:"Name", required:true}, {name:"phone", label:"Phone", required:true},
+  {name:"linkedNumber", label:"Linked number", hint:"e.g. mobile-money / WhatsApp number"},
+  {name:"notes", label:"Notes", type:"textarea"}
+]; }
+function custNew(){
+  openForm({title:"Add customer", fields:custFields(), onSave:d => {
+    if(!d.name || !d.phone) return "Name and phone are required.";
+    db.customers.push({id:uid(), name:d.name, phone:d.phone, linkedNumber:d.linkedNumber, notes:d.notes, createdAt:new Date().toISOString()});
+    log("Customer added", d.name);
+  }});
+}
+function custEdit(id){
+  const c = byId(db.customers,id);
+  openForm({title:"Edit customer", fields:custFields(), values:c, onSave:d => {
+    if(!d.name || !d.phone) return "Name and phone are required.";
+    Object.assign(c,{name:d.name,phone:d.phone,linkedNumber:d.linkedNumber,notes:d.notes}); log("Customer edited", d.name);
+  }});
+}
+function custDel(id){
+  const c = byId(db.customers,id);
+  if(db.subs.some(s=>s.customerId===id) || db.sims.some(s=>s.customerId===id))
+    return alert("This customer still has SIMs or subscription history and cannot be deleted.");
+  if(!ask(`Delete customer ${c.name}?`)) return;
+  db.customers = db.customers.filter(x=>x.id!==id); log("Customer deleted", c.name); save(); render();
+}
+function vCustomerDetail(id){
+  const c = byId(db.customers,id);
+  if(!c) return `<div class="card">Customer not found. <a href="#customers">Back</a></div>`;
+  const sims = db.sims.filter(s=>s.customerId===id), subs = db.subs.filter(s=>s.customerId===id);
+  const pays = db.payments.filter(p=>p.customerId===id).sort((a,b)=>b.date.localeCompare(a.date));
+  const bal = custBalance(id);
+  return `<p><a href="#customers">← Customers</a></p>
+  <div class="card" style="margin-bottom:16px"><div class="bar" style="margin:0">
+    <div class="grow"><b style="font-size:18px">${esc(c.name)}</b><br><span class="muted">Phone ${esc(c.phone)}${c.linkedNumber?` · Linked ${esc(c.linkedNumber)}`:""}${c.notes?` · ${esc(c.notes)}`:""}</span></div>
+    <div><span class="muted">Balance</span><br><b class="${bal>0.005?"neg":""}" style="font-size:20px">${money(bal)}</b></div>
+    ${btn("cust-edit",id,"Edit")} ${btn("pay-cust",id,"Record payment","primary")}</div></div>
+  <h3>SIMs (${sims.length})</h3>
+  ${table([{h:"MSISDN",f:s=>esc(s.msisdn)},{h:"ICCID",f:s=>esc(s.iccid)},{h:"Source",f:s=>esc(s.source)}], sims, "No SIMs assigned.")}
+  <h3>Subscriptions (${subs.length})</h3>
+  ${subTable(subs)}
+  <h3>Payment history (${pays.length})</h3>
+  ${payTable(pays)}`;
+}
+
+/* ---- Packages ---- */
+function vPackages(){
+  return `<div class="bar"><span class="grow"></span><button class="primary" data-act="pkg-new">+ Create package</button></div>
+  ${table([
+    {h:"Package", f:p=>`<b>${esc(p.name)}</b>`}, {h:"Data", num:1, f:p=>gb(p.dataGB)},
+    {h:"Selling price", num:1, f:p=>money(p.price)}, {h:"Cost", num:1, f:p=>money(p.cost)},
+    {h:"Profit", num:1, f:p=>`<b class="${cls(p.price-p.cost)}">${money(p.price-p.cost)}</b>`},
+    {h:"Margin", num:1, f:p=>p.price? Math.round((p.price-p.cost)/p.price*100)+"%":"–"},
+    {h:"Active subs", num:1, f:p=>db.subs.filter(s=>s.packageId===p.id&&s.active).length},
+    {h:"", acts:1, f:p=>btn("pkg-edit",p.id,"Edit")+" "+btn("pkg-del",p.id,"Delete","danger")}
+  ], db.packages, "No packages yet — e.g. 200 GB, 250 GB, 700 GB.")}
+  <p class="muted">Editing a package does not change existing subscriptions; each keeps the price and cost it was created with.</p>`;
+}
+function pkgForm(p){
+  const live = (n, form) => {
+    const price = num(form.price.value), cost = num(form.cost.value);
+    form.querySelector("#fhint").textContent = `Profit: ${(price-cost).toFixed(2)} ${db.settings.currency}` + (price ? ` (${Math.round((price-cost)/price*100)}% margin)` : "");
+  };
+  const fields = [
+    {name:"name", label:"Package name", required:true, full:true}, {name:"dataGB", label:"Data (GB)", type:"number", step:"any", min:0, required:true},
+    {name:"price", label:"Selling price", type:"number", step:"any", min:0, required:true},
+    {name:"cost", label:"Cost", type:"number", step:"any", min:0, required:true}
+  ];
+  openForm({title:p?"Edit package":"Create package", fields, values:p||{}, onChange:live, onSave:d => {
+    if(!d.name) return "Name is required.";
+    const rec = {name:d.name, dataGB:num(d.dataGB), price:num(d.price), cost:num(d.cost)};
+    if(rec.dataGB<=0) return "Data must be greater than 0.";
+    if(p){ Object.assign(p,rec); log("Package edited", rec.name); }
+    else { db.packages.push({id:uid(), ...rec}); log("Package created", rec.name); }
+  }});
+}
+function pkgDel(id){
+  const p = byId(db.packages,id);
+  if(db.subs.some(s=>s.packageId===id)) return alert("This package is used by subscriptions and cannot be deleted.");
+  if(!ask(`Delete package ${p.name}?`)) return;
+  db.packages = db.packages.filter(x=>x.id!==id); log("Package deleted", p.name); save(); render();
+}
+
+/* ---- Subscriptions ---- */
+function subTable(list){
+  const t = today();
+  return table([
+    {h:"Customer", f:s=>`<a href="#customer/${s.customerId}">${esc(custName(s.customerId))}</a>`},
+    {h:"SIM", f:s=>esc(simName(s.simId))}, {h:"Package", f:s=>esc(pkgName(s.packageId))},
+    {h:"Start", f:s=>s.startDate},
+    {h:"Next payment", f:s=>s.active ? `${s.nextPaymentDate}${daysBetween(t,s.nextPaymentDate)<=3?` <span class="pill warn">${daysBetween(t,s.nextPaymentDate)<=0?"due":"soon"}</span>`:""}` : "–"},
+    {h:"Payment", f:s=>{const b=balance(s.id), p=paid(s.id);
+        return b<=0.005 ? `<span class="pill ok">Paid</span>` : `<span class="pill bad">${p>0?"Partial":"Unpaid"}</span> <span class="muted">${money(b)}</span>`}},
+    {h:"Data used / left", f:s=>{const p=byId(db.packages,s.packageId), tot=p?p.dataGB:0, left=Math.max(0,tot-s.usedGB);
+        return `${gb(s.usedGB)} / ${gb(left)}<div class="meter"><i style="width:${tot?Math.min(100,s.usedGB/tot*100):0}%"></i></div>`}},
+    {h:"Status", f:s=>s.active?`<span class="pill ok">Active</span>`:`<span class="pill gray">Ended</span>`},
+    {h:"", acts:1, f:s=>(s.active?btn("sub-usage",s.id,"Usage")+" "+btn("pay-sub",s.id,"Pay")+" "+btn("sub-end",s.id,"End","danger"):btn("sub-react",s.id,"Reactivate"))}
+  ], list, "No subscriptions yet.");
+}
+function vSubs(){
+  const f = filters.subs || "all";
+  const rows = db.subs.filter(s => {
+    const okf = f==="all" || (f==="active"&&s.active) || (f==="ended"&&!s.active) || (f==="unpaid"&&balance(s.id)>0.005);
+    return okf && (!query || [custName(s.customerId),simName(s.simId),pkgName(s.packageId)].some(x=>x.toLowerCase().includes(query.toLowerCase())));
+  }).sort((a,b)=>a.nextPaymentDate.localeCompare(b.nextPaymentDate));
+  return `<div class="bar">${searchBox("Search customer, SIM, package")}
+    <select id="f-subs">${[["all","All"],["active","Active"],["unpaid","Unpaid"],["ended","Ended"]].map(([v,l])=>`<option value="${v}" ${f===v?"selected":""}>${l}</option>`).join("")}</select>
+    <span class="grow"></span><button data-act="renew-now">Run renewals</button><button class="primary" data-act="sub-new">+ New subscription</button></div>
+  ${subTable(rows)}
+  <p class="muted">Renewals run automatically whenever the app opens: on each next-payment date a new charge is billed, data usage resets, and the date moves forward one month.</p>`;
+}
+function subNew(){
+  if(!db.customers.length || !db.packages.length) return alert("Add at least one customer and one package first.");
+  const free = db.sims.filter(s => !activeSubOfSim(s.id));
+  if(!free.length) return alert("No SIMs available — add a SIM to the inventory first.");
+  const fields = [
+    {name:"customerId", label:"Customer", type:"select", full:true, options:db.customers.map(c=>[c.id,`${c.name} (${c.phone})`])},
+    {name:"simId", label:"SIM", type:"select", full:true, options:free.map(s=>[s.id,`${s.msisdn} — ${s.status==="stock"?"in stock":"assigned to "+custName(s.customerId)}`])},
+    {name:"packageId", label:"Package", type:"select", full:true, options:db.packages.map(p=>[p.id,`${p.name} — ${p.price} ${db.settings.currency}`])},
+    {name:"startDate", label:"Start date", type:"date", required:true, value:today()},
+    {name:"price", label:"Price", type:"number", step:"any", min:0, required:true},
+    {name:"cost", label:"Cost", type:"number", step:"any", min:0, required:true},
+    {name:"paidNow", label:"Paid now (optional)", type:"number", step:"any", min:0}
+  ];
+  openForm({title:"New subscription", fields, submit:"Create",
+    onChange:(n,form) => { if(n===null||n==="packageId"){ const p=byId(db.packages,form.packageId.value); if(p){form.price.value=p.price; form.cost.value=p.cost;} } },
+    onSave:d => {
+      const sim = byId(db.sims,d.simId);
+      if(sim.customerId && sim.customerId!==d.customerId) return `That SIM is assigned to ${custName(sim.customerId)}. Return it to stock first.`;
+      if(!d.startDate) return "Start date is required.";
+      const price = num(d.price), cost = num(d.cost), p = byId(db.packages,d.packageId);
+      const s = {id:uid(), simId:d.simId, customerId:d.customerId, packageId:d.packageId, startDate:d.startDate,
+        nextPaymentDate:addMonths(d.startDate,1), price, cost, usedGB:0, active:true};
+      db.subs.push(s);
+      db.charges.push({id:uid(), subId:s.id, customerId:s.customerId, packageId:s.packageId, date:d.startDate, amount:price, cost, kind:"initial"});
+      sim.status="assigned"; sim.customerId=d.customerId;
+      log("Subscription created", `${custName(d.customerId)} · ${sim.msisdn} · ${p.name}`);
+      if(num(d.paidNow)>0) addPayment(s, num(d.paidNow), "Cash", "", d.startDate, "Paid at signup");
+      runRenewals();
+    }});
+}
+function subUsage(id){
+  const s = byId(db.subs,id), p = byId(db.packages,s.packageId);
+  openForm({title:`Data usage — ${simName(s.simId)}`, values:{usedGB:s.usedGB},
+    fields:[{name:"usedGB", label:`Data used (GB) of ${p?p.dataGB:"?"} GB`, type:"number", step:"any", min:0, required:true, full:true}],
+    onSave:d => { s.usedGB = num(d.usedGB); log("Usage updated", `${simName(s.simId)}: ${s.usedGB} GB`); }});
+}
+function subEnd(id){
+  const s = byId(db.subs,id);
+  if(!ask(`End subscription for ${custName(s.customerId)} (${simName(s.simId)})? No further renewals will be billed. Outstanding balance stays on record.`)) return;
+  s.active=false; log("Subscription ended", `${custName(s.customerId)} · ${simName(s.simId)}`); save(); render();
+}
+function subReact(id){
+  const s = byId(db.subs,id);
+  if(activeSubOfSim(s.simId)) return alert("That SIM already has another active subscription.");
+  s.active=true; s.nextPaymentDate=addMonths(today(),1);
+  db.charges.push({id:uid(), subId:s.id, customerId:s.customerId, packageId:s.packageId, date:today(), amount:s.price, cost:s.cost, kind:"reactivation"});
+  s.usedGB=0; log("Subscription reactivated", `${custName(s.customerId)} · ${simName(s.simId)}`); save(); render();
+}
+
+/* ---- Payments ---- */
+function payTable(list){
+  return table([
+    {h:"Date", f:p=>p.date}, {h:"Customer", f:p=>esc(custName(p.customerId))},
+    {h:"SIM / package", f:p=>{const s=byId(db.subs,p.subId); return s?`${esc(simName(s.simId))} · ${esc(pkgName(s.packageId))}`:""}},
+    {h:"Method", f:p=>esc(p.method)}, {h:"Reference", f:p=>esc(p.ref)},
+    {h:"Amount", num:1, f:p=>`<b>${money(p.amount)}</b>`}, {h:"Note", f:p=>esc(p.note)},
+    {h:"", acts:1, f:p=>btn("pay-del",p.id,"Delete","danger")}
+  ], list, "No payments recorded.");
+}
+function vPayments(){
+  const rows = db.payments.filter(p => !query || [custName(p.customerId),p.ref,p.method,p.note].some(x=>String(x||"").toLowerCase().includes(query.toLowerCase())))
+                          .sort((a,b)=>b.date.localeCompare(a.date));
+  const owing = db.customers.map(c=>({c,b:custBalance(c.id)})).filter(x=>x.b>0.005);
+  return `<div class="bar">${searchBox("Search customer, reference, method")}<span class="grow"></span>
+    <button class="primary" data-act="pay-new">+ Record payment</button></div>
+  <div class="grid"><div class="card stat"><div class="l">Total collected</div><div class="v">${money(sum(db.payments,p=>p.amount))}</div></div>
+  <div class="card stat"><div class="l">Outstanding balance</div><div class="v neg">${money(sum(owing,x=>x.b))}</div></div></div>
+  <h3>Outstanding by customer</h3>
+  ${table([{h:"Customer",f:x=>`<a href="#customer/${x.c.id}">${esc(x.c.name)}</a>`},{h:"Phone",f:x=>esc(x.c.phone)},
+           {h:"Owes",num:1,f:x=>`<b class="neg">${money(x.b)}</b>`},{h:"",acts:1,f:x=>btn("pay-cust",x.c.id,"Record payment")}], owing, "No outstanding balances.")}
+  <h3>Payment history</h3>${payTable(rows)}`;
+}
+function addPayment(sub, amount, method, ref, date, note){
+  db.payments.push({id:uid(), subId:sub.id, customerId:sub.customerId, amount, method, ref, date, note});
+  log("Payment recorded", `${money(amount).replace(/&[a-z]+;/g,"")} · ${custName(sub.customerId)} · ${method}${ref?" · "+ref:""}`);
+}
+function payNew(preCust, preSub){
+  const subs = db.subs.filter(s => preCust ? s.customerId===preCust : true);
+  if(!subs.length) return alert(preCust ? "This customer has no subscriptions yet." : "Create a subscription first.");
+  // default: preselected sub, else the one with the largest balance
+  const def = preSub ? byId(db.subs,preSub) : [...subs].sort((a,b)=>balance(b.id)-balance(a.id))[0];
+  const fields = [
+    {name:"subId", label:"Subscription", type:"select", full:true,
+      options:subs.map(s=>[s.id,`${custName(s.customerId)} · ${simName(s.simId)} · ${pkgName(s.packageId)} · owes ${Math.max(0,balance(s.id)).toFixed(2)}`])},
+    {name:"amount", label:"Amount", type:"number", step:"any", min:0, required:true},
+    {name:"date", label:"Date", type:"date", required:true, value:today()},
+    {name:"method", label:"Method", type:"select", options:[["Cash","Cash"],["Mobile Money","Mobile Money"],["Bank","Bank"]]},
+    {name:"ref", label:"Reference number"},
+    {name:"note", label:"Note", full:true}
+  ];
+  openForm({title:"Record payment", fields, values:{subId:def.id}, submit:"Record",
+    onChange:(n,form) => {
+      if(n===null||n==="subId"){ const b=balance(form.subId.value); form.amount.value = b>0.005 ? b.toFixed(2) : ""; }
+      const b=balance(form.subId.value), a=num(form.amount.value);
+      form.querySelector("#fhint").textContent = a>b+0.005 ? `Amount exceeds the balance (${Math.max(0,b).toFixed(2)}); the extra is kept as credit.` : "";
+    },
+    onSave:d => {
+      const a = num(d.amount); if(a<=0) return "Enter an amount greater than 0.";
+      if(!d.date) return "Date is required.";
+      addPayment(byId(db.subs,d.subId), a, d.method, d.ref, d.date, d.note);
+    }});
+}
+function payDel(id){
+  const p = byId(db.payments,id);
+  if(!ask(`Delete this payment of ${p.amount} from ${custName(p.customerId)}? Balances will be recalculated.`)) return;
+  db.payments = db.payments.filter(x=>x.id!==id); log("Payment deleted", `${p.amount} · ${custName(p.customerId)} · ${p.date}`); save(); render();
+}
+
+/* ---- Reports ---- */
+const REPORTS = {};
+function pkgReport(){
+  return db.packages.map(p => {
+    const ch = db.charges.filter(c => c.packageId===p.id);
+    const rev = sum(ch,c=>c.amount), cost = sum(ch,c=>c.cost);
+    return {name:p.name, subs:db.subs.filter(s=>s.packageId===p.id&&s.active).length, bills:ch.length, rev, cost, profit:rev-cost, margin:rev?Math.round((rev-cost)/rev*100):0};
+  });
+}
+function pkgTotal(pr){
+  const rev=sum(pr,r=>r.rev), cost=sum(pr,r=>r.cost);
+  return {name:"Total", subs:sum(pr,r=>r.subs), bills:sum(pr,r=>r.bills), rev, cost, profit:rev-cost, margin:rev?Math.round((rev-cost)/rev*100):0};
+}
+function custReport(){
+  return db.customers.map(c => {
+    const subs = db.subs.filter(s=>s.customerId===c.id);
+    const billed = sum(subs,s=>charged(s.id)), pd = sum(subs,s=>paid(s.id));
+    return {name:c.name, phone:c.phone, sims:db.sims.filter(s=>s.customerId===c.id).length, active:subs.filter(s=>s.active).length, billed, paid:pd, balance:billed-pd};
+  });
+}
+function monthReport(){
+  const m = {};
+  const row = k => (m[k] ||= {month:k, billed:0, cost:0, collected:0});
+  db.charges.forEach(c => { const r=row(c.date.slice(0,7)); r.billed+=c.amount; r.cost+=c.cost; });
+  db.payments.forEach(p => { row(p.date.slice(0,7)).collected += p.amount; });
+  return Object.values(m).sort((a,b)=>b.month.localeCompare(a.month)).map(r=>({...r, profit:r.billed-r.cost}));
+}
+function vReports(){
+  const from = filters.from||"", to = filters.to||"";
+  const pays = db.payments.filter(p => (!from||p.date>=from) && (!to||p.date<=to)).sort((a,b)=>b.date.localeCompare(a.date));
+  const pr = pkgReport(), cr = custReport(), mr = monthReport();
+  REPORTS.pkg = [pr, [["Package",r=>r.name],["Active subs",r=>r.subs],["Billings",r=>r.bills],["Revenue",r=>r.rev],["Cost",r=>r.cost],["Profit",r=>r.profit],["Margin %",r=>r.margin]]];
+  REPORTS.cust = [cr, [["Customer",r=>r.name],["Phone",r=>r.phone],["SIMs",r=>r.sims],["Active subs",r=>r.active],["Billed",r=>r.billed],["Paid",r=>r.paid],["Balance",r=>r.balance]]];
+  REPORTS.pay = [pays, [["Date",p=>p.date],["Customer",p=>custName(p.customerId)],["SIM",p=>{const s=byId(db.subs,p.subId);return s?simName(s.simId):""}],["Method",p=>p.method],["Reference",p=>p.ref],["Amount",p=>p.amount],["Note",p=>p.note]]];
+  REPORTS.sim = [db.sims, [["MSISDN",s=>s.msisdn],["Source",s=>s.source],["ICCID",s=>s.iccid],["Status",s=>s.status],["Customer",s=>s.customerId?custName(s.customerId):""],["Added",s=>s.createdAt.slice(0,10)]]];
+  REPORTS.month = [mr, [["Month",r=>r.month],["Billed",r=>r.billed],["Cost",r=>r.cost],["Profit",r=>r.profit],["Collected",r=>r.collected]]];
+  const head = (t,k) => `<div class="bar"><h3 style="margin:0">${t}</h3><span class="grow"></span><button class="sm" data-act="csv" data-id="${k}">Export CSV</button></div>`;
+  const tot = (rows,f) => sum(rows,f);
+  return `
+  ${head("Revenue & profit by package","pkg")}
+  ${table([{h:"Package",f:r=>esc(r.name)},{h:"Active subs",num:1,f:r=>r.subs},{h:"Billings",num:1,f:r=>r.bills},
+    {h:"Revenue",num:1,f:r=>money(r.rev)},{h:"Cost",num:1,f:r=>money(r.cost)},{h:"Profit",num:1,f:r=>`<b class="${cls(r.profit)}">${money(r.profit)}</b>`},{h:"Margin",num:1,f:r=>r.margin+"%"}],
+    pr.length ? [...pr, pkgTotal(pr)] : pr, "No packages.")}
+  ${head("Customer report","cust")}
+  ${table([{h:"Customer",f:r=>esc(r.name)},{h:"Phone",f:r=>esc(r.phone)},{h:"SIMs",num:1,f:r=>r.sims},{h:"Active subs",num:1,f:r=>r.active},
+    {h:"Billed",num:1,f:r=>money(r.billed)},{h:"Paid",num:1,f:r=>money(r.paid)},{h:"Balance",num:1,f:r=>`<b class="${r.balance>0.005?"neg":""}">${money(r.balance)}</b>`}], cr, "No customers.")}
+  <div class="bar"><h3 style="margin:0">Payment report</h3><span class="grow"></span>
+    <label style="margin:0">From <input type="date" id="r-from" value="${esc(from)}" style="width:auto"></label>
+    <label style="margin:0">To <input type="date" id="r-to" value="${esc(to)}" style="width:auto"></label>
+    <button class="sm" data-act="csv" data-id="pay">Export CSV</button></div>
+  ${table([{h:"Date",f:p=>p.date},{h:"Customer",f:p=>esc(custName(p.customerId))},{h:"Method",f:p=>esc(p.method)},{h:"Reference",f:p=>esc(p.ref)},{h:"Amount",num:1,f:p=>money(p.amount)}], pays, "No payments in this range.")}
+  <p class="muted">Total in range: <b>${money(sum(pays,p=>p.amount))}</b> · Cash ${money(sum(pays.filter(p=>p.method==="Cash"),p=>p.amount))} · Mobile Money ${money(sum(pays.filter(p=>p.method==="Mobile Money"),p=>p.amount))} · Bank ${money(sum(pays.filter(p=>p.method==="Bank"),p=>p.amount))}</p>
+  ${head("SIM inventory report","sim")}
+  ${table([{h:"MSISDN",f:s=>esc(s.msisdn)},{h:"Source",f:s=>esc(s.source)},{h:"ICCID",f:s=>esc(s.iccid)},{h:"Status",f:s=>s.status==="stock"?"In stock":"Assigned"},{h:"Customer",f:s=>s.customerId?esc(custName(s.customerId)):""}], db.sims, "No SIMs.")}
+  <p class="muted">${db.sims.filter(s=>s.status==="stock").length} in stock · ${db.sims.filter(s=>s.status==="assigned").length} assigned · ${db.sims.length} total</p>
+  ${head("Monthly performance","month")}
+  ${table([{h:"Month",f:r=>r.month},{h:"Billed",num:1,f:r=>money(r.billed)},{h:"Cost",num:1,f:r=>money(r.cost)},
+    {h:"Profit",num:1,f:r=>`<b class="${cls(r.profit)}">${money(r.profit)}</b>`},{h:"Collected",num:1,f:r=>money(r.collected)}], mr, "No activity yet.")}`;
+}
+
+/* ---- Data & backup ---- */
+const TABLES = {
+  sims:[["MSISDN",s=>s.msisdn],["Source",s=>s.source],["ICCID",s=>s.iccid],["Status",s=>s.status],["Customer",s=>s.customerId?custName(s.customerId):""],["Added",s=>s.createdAt]],
+  customers:[["Name",c=>c.name],["Phone",c=>c.phone],["Linked number",c=>c.linkedNumber],["Notes",c=>c.notes],["Balance",c=>custBalance(c.id)]],
+  packages:[["Name",p=>p.name],["Data GB",p=>p.dataGB],["Price",p=>p.price],["Cost",p=>p.cost],["Profit",p=>p.price-p.cost]],
+  subs:[["Customer",s=>custName(s.customerId)],["SIM",s=>simName(s.simId)],["Package",s=>pkgName(s.packageId)],["Start",s=>s.startDate],["Next payment",s=>s.nextPaymentDate],["Price",s=>s.price],["Cost",s=>s.cost],["Used GB",s=>s.usedGB],["Balance",s=>balance(s.id)],["Active",s=>s.active?"yes":"no"]],
+  payments:[["Date",p=>p.date],["Customer",p=>custName(p.customerId)],["Amount",p=>p.amount],["Method",p=>p.method],["Reference",p=>p.ref],["Note",p=>p.note]],
+  audit:[["Time",a=>a.ts],["Action",a=>a.action],["Detail",a=>a.detail]]
+};
+function vData(){
+  const lb = db.settings.lastBackup;
+  const days = lb ? daysBetween(lb.slice(0,10), today()) : null;
+  return `${!storageOK?`<div class="banner">Browser storage is unavailable — changes will be lost when you close this page. Download a backup now.</div>`:""}
+  <div class="card" style="margin-bottom:16px">
+    <b>Backup & restore</b>
+    <p class="muted">All data lives only in this browser. Last backup: <b>${lb?`${esc(lb.replace("T"," ").slice(0,16))} (${days} day${days===1?"":"s"} ago)`:"never"}</b></p>
+    <div class="bar"><button class="primary" data-act="backup">Download JSON backup</button>
+      <button data-act="restore">Restore from backup…</button><input type="file" id="restore-file" accept="application/json,.json" hidden></div></div>
+  <div class="card" style="margin-bottom:16px"><b>CSV exports</b>
+    <div class="bar" style="margin-top:10px">${Object.keys(TABLES).map(k=>`<button data-act="csv-table" data-id="${k}">${{subs:"subscriptions"}[k]||k}.csv</button>`).join("")}</div></div>
+  <div class="card" style="margin-bottom:16px"><b>Settings</b>
+    <div class="bar" style="margin-top:10px"><label style="margin:0">Currency label <input id="currency" value="${esc(db.settings.currency)}" style="width:110px"></label></div></div>
+  <h3>Activity / audit log (${db.audit.length})</h3>
+  ${table([{h:"Time",f:a=>esc(a.ts.replace("T"," ").slice(0,19))},{h:"Action",f:a=>`<b>${esc(a.action)}</b>`},{h:"Detail",f:a=>esc(a.detail)}], db.audit.slice(0,200), "No activity yet.")}
+  ${db.audit.length>200?`<p class="muted">Showing latest 200. Export audit.csv for the full log.</p>`:""}`;
+}
+function backup(){
+  download(`iskaashi-backup-${today()}.json`, JSON.stringify({app:"iskaashi-auto-service", version:1, exportedAt:new Date().toISOString(), data:db}, null, 2), "application/json");
+  db.settings.lastBackup = new Date().toISOString(); log("Backup downloaded"); save(); render();
+}
+function restore(file){
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const obj = JSON.parse(r.result);
+      const d = obj && obj.app==="iskaashi-auto-service" ? obj.data : null;
+      if(!d || !["sims","customers","packages","subs","payments"].every(k=>Array.isArray(d[k]))) throw new Error("bad");
+      if(!ask(`Restore this backup? It will REPLACE all current data (${db.sims.length} SIMs, ${db.customers.length} customers). Download a backup first if unsure.`)) return;
+      db = Object.assign(EMPTY(), d); db.settings = Object.assign(EMPTY().settings, d.settings);
+      log("Backup restored", file.name); runRenewals(); save(); render();
+    }catch(e){ alert("That file is not a valid Iskaashi backup."); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ Router / events ============ */
+function currentRoute(){ return (location.hash.replace(/^#/,"") || "dashboard"); }
+function render(){
+  const full = currentRoute(), [name, arg] = full.split("/");
+  const key = routes[name] ? name : (name==="customer" ? "customers" : "dashboard");
+  document.getElementById("nav").innerHTML = `<h1>📶 Iskaashi Auto</h1>` +
+    Object.entries(routes).map(([k,[l]])=>`<a href="#${k}" class="${k===key?"on":""}">${l}</a>`).join("");
+  const title = name==="customer" ? "Customer" : routes[key][0];
+  const body = name==="customer" ? vCustomerDetail(arg) : routes[key][1]();
+  document.getElementById("view").innerHTML =
+    (!storageOK && key!=="data" ? `<div class="banner">Browser storage is unavailable — data will not be kept. Use Data & Backup to download a copy.</div>`:"") +
+    (key==="dashboard" && (!db.settings.lastBackup || daysBetween(db.settings.lastBackup.slice(0,10),today())>7) && (db.sims.length||db.customers.length)
+      ? `<div class="banner warn">No backup in the last 7 days. <a href="#data">Download a backup</a>.</div>`:"") +
+    `<h2>${title}</h2>` + body;
+  document.title = `${title} · Iskaashi Auto Service`;
+  const q = document.getElementById("q");
+  if(q){ q.oninput = () => { query = q.value; const pos=q.selectionStart; render(); const n=document.getElementById("q"); n.focus(); n.setSelectionRange(pos,pos); }; }
+  const sf = document.getElementById("f-sims"); if(sf) sf.onchange = () => { filters.sims = sf.value; render(); };
+  const uf = document.getElementById("f-subs"); if(uf) uf.onchange = () => { filters.subs = uf.value; render(); };
+  const rf = document.getElementById("r-from"), rt = document.getElementById("r-to");
+  if(rf) rf.onchange = () => { filters.from = rf.value; render(); };
+  if(rt) rt.onchange = () => { filters.to = rt.value; render(); };
+  const cur = document.getElementById("currency");
+  if(cur) cur.onchange = () => { db.settings.currency = cur.value.trim() || "USD"; log("Currency changed", db.settings.currency); save(); render(); };
+  const rfile = document.getElementById("restore-file");
+  if(rfile) rfile.onchange = () => { if(rfile.files[0]) restore(rfile.files[0]); rfile.value=""; };
+}
+window.addEventListener("hashchange", () => { query=""; render(); window.scrollTo(0,0); });
+
+const actions = {
+  "sim-new":simNew, "sim-edit":simEdit, "sim-assign":simAssign, "sim-return":simReturn, "sim-del":simDel,
+  "cust-new":custNew, "cust-edit":custEdit, "cust-del":custDel,
+  "pkg-new":()=>pkgForm(), "pkg-edit":id=>pkgForm(byId(db.packages,id)), "pkg-del":pkgDel,
+  "sub-new":subNew, "sub-usage":subUsage, "sub-end":subEnd, "sub-react":subReact,
+  "renew-now":()=>{ const n=runRenewals(); alert(n?`${n} renewal(s) billed.`:"Nothing due for renewal."); render(); },
+  "pay-new":()=>payNew(), "pay-cust":id=>payNew(id), "pay-sub":id=>payNew(null,id), "pay-del":payDel,
+  "csv":k=>exportCSV(`report-${k}`, REPORTS[k][0], REPORTS[k][1]),
+  "csv-table":k=>exportCSV(k, db[k], TABLES[k]),
+  "backup":backup, "restore":()=>document.getElementById("restore-file").click()
+};
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if(!b) return;
+  const fn = actions[b.dataset.act]; if(fn) fn(b.dataset.id);
+});
+
+/* ============ Boot ============ */
+load();
+runRenewals();
+if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+render();
+</script>
+</body>
+</html>
